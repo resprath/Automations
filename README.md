@@ -11,7 +11,7 @@ This repository provides a collection of **Terraform** and **Ansible** automatio
 ├── provider.tf           # IBM Cloud provider configuration
 ├── variables.tf          # Variable definitions
 ├── versions.tf           # Provider and Terraform versions
-├── outputs.tf            # Provides Terraform outputs (HMAC, Access Group IDs) to Ansible
+├── outputs.tf            # Provides Terraform outputs (HMAC, Access Group IDs) to Ansible ( OPTIONAL or can be definedin main.tf)
 └── ansible/
     ├── hosts.inv         # Ansible inventory file
     ├── wxd_create.yaml   # Creates Watsonx.data catalog and sets up permissions
@@ -28,7 +28,6 @@ Ensure the following before using this automation:
   - IAM access groups and policies
   - COS, KMS, Secrets Manager
   - Watsonx.data (catalog, schema, engine)
-  - Event Streams (optional)
 
 
 #How to Use
@@ -39,7 +38,7 @@ cd Automations
 Go to IBM Cloud Schematics.
 Create a new workspace.
 Set GitHub as the source control and link this repo.
-Set input variables via UI or variables.tf or terraform.tfvars
+Set input variables via UI or variables.tf
 🔹 Step 3: Configure Variables
 Edit terraform.tfvars or define variables in the UI such as 
 region            = "us-south"
