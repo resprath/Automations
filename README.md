@@ -44,7 +44,7 @@ cd Automations
 - Set input variables via the UI or define them in `variables.tf`.
 
 🔹 Step 3: Configure Variables
-- Edit terraform.tfvars or define variables in the UI such as 
+- Edit variables.tf or define variables in the Schematics UI such as 
 ```bash
 region            = "us-south"
 catalog_name      = "demo-catalog"
