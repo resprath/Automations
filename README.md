@@ -30,7 +30,8 @@ Ensure the following before using this automation:
   - Watsonx.data (catalog, schema, engine)
 
 
-#How to Use
+## How to Use
+
 🔹 Step 1: Clone the Repository 
 git clone https://github.com/resprath/Automations
 cd Automations
