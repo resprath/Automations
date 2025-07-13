@@ -2,7 +2,7 @@
 
 HOW TO RUN THIS TERRAFORM CODE (NOT ON SCHEMATICS)
 
-In main.tf, the first 34 resources are related to IBM cloud resources such as secrets, COS instances, buckets, KMS instance, secrets etc.
+In `main.tf`, the first 34 resources are related to IBM cloud resources such as secrets, COS instances, buckets, KMS instance, secrets etc.
 
 Along with the regular Cloud variables ( 34 resources) we have Two Ansible playbooks defined as resources. One is for creating WXD resources and another one for deleting.
 
