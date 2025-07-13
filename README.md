@@ -5,16 +5,17 @@ This repository provides a collection of **Terraform** and **Ansible** automatio
 
 ##  Repository Structure
 
-
-├── main.tf # IBM Cloud resources: IAM, COS, Secrets Manager, KMS
-├── provider.tf # IBM Cloud provider configuration
-├── variables.tf # Variable definitions
-├── versions.tf # Provider and Terraform versions
-├── outputs.tf # Provides Terraform outputs (HMAC, Access Group IDs) to Ansible
+```text
+.
+├── main.tf               # IBM Cloud resources: IAM, COS, Secrets Manager, KMS
+├── provider.tf           # IBM Cloud provider configuration
+├── variables.tf          # Variable definitions
+├── versions.tf           # Provider and Terraform versions
+├── outputs.tf            # Provides Terraform outputs (HMAC, Access Group IDs) to Ansible
 └── ansible/
-├── hosts.inv # Ansible inventory file
-├── wxd_create.yaml # Creates Watsonx.data catalog and sets up permissions
-└── wxd_destroy.yaml # Cleans up WXD catalog and related resources
+    ├── hosts.inv         # Ansible inventory file
+    ├── wxd_create.yaml   # Creates Watsonx.data catalog and sets up permissions
+    └── wxd_destroy.yaml  # Cleans up WXD catalog and related resources
 
 ## Prerequisites
 
