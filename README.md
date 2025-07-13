@@ -1,6 +1,28 @@
-# Readme
+## Readme
 
-HOW TO RUN THIS TERRAFORM CODE (NOT ON SCHEMATICS)
+# HOW TO RUN THIS TERRAFORM CODE (NOT ON SCHEMATICS)
+
+This repository provides a collection of Terraform and Ansible automation workflows to streamline resource provisioning and Watsonx.data catalog setup on IBM Cloud. It enables consistent, secure, and rapid environment onboarding.
+
+├── main.tf               # IBM Cloud resources: IAM, COS, Secrets Manager, KMS
+├── provider.tf           # IBM Cloud provider configuration
+├── variables.tf          # Variable definitions
+├── versions.tf           # Provider and Terraform versions
+└── ansible/
+    ├── hosts.inv         # Ansible inventory file
+    ├── wxd_create.yaml   # Creates Watsonx.data catalog and sets up permissions
+    └── wxd_destroy.yaml  # Cleans up WXD catalog and related resources
+
+# Prerequisites
+Before using this automation, ensure you have the following:
+IBM Cloud account with required service access
+IBM Schematics workspace linked to this GitHub repo
+Terraform v1.4+ (managed by Schematics)
+Required IAM access to:
+Create COS, KMS, Secrets Manager, Event Streams
+Assign IAM policies
+Register catalogs and buckets in Watsonx.data
+
 
 In `main.tf`, the first 34 resources are related to IBM cloud resources such as secrets, COS instances, buckets, KMS instance, secrets etc.
 
