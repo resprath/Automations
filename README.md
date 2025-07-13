@@ -53,16 +53,3 @@ Run Apply Plan in the Schematics UI after ensuring the following variable in Sch
 This will Provision all required cloud services and Watsonx.data resources
 🔹 Step 5: Destroy resources
 In Schematics, Run Apply plan after changing -var="create=false " which will delete all WXD resources and then click Destroy to remove all Terraform-managed resources
-
-In `main.tf`, the first 34 resources are related to IBM cloud resources such as secrets, COS instances, buckets, KMS instance, secrets etc.
-
-Along with the regular Cloud variables ( 34 resources) we have Two Ansible playbooks defined as resources. One is for creating WXD resources and another one for deleting.
-
-Create is a two step with plan and apply.
-
-**NOTE** : -auto-approve will run the script without waiting for the approval in terms of yes/no.. Be vigilant about what you are about to run.
-
-1) terraform plan  
-
-2) terraform apply -var="create=true" -auto-approve  
-
