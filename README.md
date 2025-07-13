@@ -1,8 +1,7 @@
-# README
+# IBM Cloud & Watsonx.data Automation Toolkit
 
-# HOW TO RUN THIS TERRAFORM CODE (NOT ON SCHEMATICS)
 
-This repository provides a collection of Terraform and Ansible automation workflows to streamline resource provisioning and Watsonx.data catalog setup on IBM Cloud. It enables consistent, secure, and rapid environment onboarding.
+This repository provides a collection of **Terraform** and **Ansible** automation workflows to streamline resource provisioning and Watsonx.data catalog setup on IBM Cloud. It enables consistent, secure, and rapid environment onboarding.
 
 ├── main.tf               # IBM Cloud resources: IAM, COS, Secrets Manager, KMS
 ├── provider.tf           # IBM Cloud provider configuration
