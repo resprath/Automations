@@ -1,0 +1,231 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+  ###### Generate IAM Access Token ######
+    - name: Extract access_key_id from decoded JSON
+      set_fact:
+        access_key_id: "{{ (hmac_credentials | from_json)['cos_hmac_keys.access_key_id']}}"
+    - name: Extracted secret_access_key from JSON
+      set_fact:
+        secret_access_key: "{{ (hmac_credentials | from_json)['cos_hmac_keys.secret_access_key']}}"
+    - name: Request IAM token from IBM Cloud
+      shell: |
+        curl -X POST '{{ iam_url }}' -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey={{ ibmcloud_api_key }}'
+      args:
+        executable: /bin/bash
+      register: iam_token_response
+      tags: request_token
+      become: no
+    - name: Display IAM token
+      debug:
+        msg: "{{ iam_token_response.stdout | from_json | json_query('access_token') }}"
+    - name: Set access_token as a fact
+      set_fact:
+        access_token: "{{ iam_token_response.stdout | from_json | json_query('access_token') }}"
+
+  ##### Generate API Header #####
+    - name: Generating API Header
+      set_fact:
+        api_header: "-H 'accept: application/json' \
+                     -H 'AuthInstanceId: {{ auth_instance_id }}' \
+                     -H 'Authorization: Bearer {{ access_token }}' \
+                     -H 'Content-Type: application/json'"
+        activate_bucket_header: "-H 'accept: application/json' \
+                     -H 'AuthInstanceId: {{ auth_instance_id }}' \
+                     -H 'Authorization: Bearer {{ access_token }}'"
+
+  ##### Registering Bucket in WatsonX.data
+    ## Set data for the bucket registration
+    - name: Define the data for Registering Bucket API
+      set_fact:
+        register_bucket_data:
+          bucket_details:
+            access_key: "{{ access_key_id }}"
+            bucket_name: "{{ ansible_bucket_name }}"
+            endpoint: "{{ bucket_endpoint }}"
+            secret_key: "{{ secret_access_key }}"
+          bucket_display_name: "{{ bucket_display }}"
+          bucket_type: "{{ bucket_type }}"
+          description: "{{ description }}"
+          managed_by: "{{ managed_by }}"
+          region: "{{ region }}"
+          associated_catalog:
+            catalog_name: "{{ catalog_name }}"
+            catalog_type: "{{ catalog_type }}"
+        catalog_group_data:
+          groups:
+            - group_id: "{{ reader_access_group_id }}"
+              permission: "{{ reader_catalog_group_permission }}"
+            - group_id: "{{ auto_access_group_id }}"
+              permission: "{{ auto_catalog_group_permission }}"
+            - group_id: "{{ admin1_access_group_id }}"
+              permission: "{{ auto_catalog_group_permission }}"
+            - group_id: "{{ admin2_access_group_id }}"
+              permission: "{{ auto_catalog_group_permission }}"
+            - group_id: "{{ admin3_access_group_id }}"
+              permission: "{{ auto_catalog_group_permission }}"
+        engine_group_data:
+          groups:
+            - group_id: "{{ reader_access_group_id }}"
+              permission: "{{ reader_engine_group_permission }}"    
+            - group_id: "{{ auto_access_group_id }}"
+              permission: "{{ auto_engine_group_permission }}"
+            - group_id: "{{ admin1_access_group_id }}"
+              permission: "{{ auto_engine_group_permission }}"
+            - group_id: "{{ admin2_access_group_id }}"
+              permission: "{{ auto_engine_group_permission }}"
+            - group_id: "{{ admin3_access_group_id }}"
+              permission: "{{ auto_engine_group_permission }}"
+        storage_group_data:
+          groups:
+            - group_id: "{{ reader_access_group_id }}"
+              permission: "{{ reader_storage_group_permission }}"     
+            - group_id: "{{ auto_access_group_id }}"
+              permission: "{{ auto_storage_group_permission }}"
+            - group_id: "{{ admin1_access_group_id }}"
+              permission: "{{ admin_storage_group_permission }}"
+            - group_id: "{{ admin2_access_group_id }}"
+              permission: "{{ admin_storage_group_permission }}"
+            - group_id: "{{ admin3_access_group_id }}"
+              permission: "{{ admin_storage_group_permission }}"         
+
+    ## Call the Bucket registration API
+    - name: Call the Bucket registration API
+      become: no
+      shell: |
+        curl -X POST {{ api_header }} \
+        -d '{{ register_bucket_data | to_nice_json }}' \
+        "{{ bucket_registration_api }}"
+      args:
+        executable: /bin/bash
+      register: register_bucket_response
+
+#####  Activating Bucket in WXD
+    ## Set API for Activating Bucket 
+    - name: Define API for Activating Bucket
+      set_fact:
+        activate_bucket_api: "{{bucket_registration_api}}/{{ ansible_bucket_name }}/activate"
+###Call the Bucket Activation API
+    - name: Call the Bucket activation API
+      become: no
+      shell: |
+        curl -X POST {{activate_bucket_header}} \
+        -d "" \
+        {{ activate_bucket_api }}
+      args:
+        executable: /bin/bash
+      register: activate_bucket_response          
+###Associate Catalog with Presto Engine
+    - name: Call the Presto association API  
+      become: no
+      shell: |
+         curl -X POST {{api_header}} \
+          "{{ presto_engine_url }}/{{ engine_id }}/catalogs" \
+          -d '{"catalog_names": "{{ catalog_name }}"}'
+      args:
+        executable: /bin/bash
+      register: associate_presto_response 
+
+###Associate Catalog with Spark Engine
+    - name: Call the Spark association API  
+      become: no
+      shell: |
+         curl -X POST {{api_header}} \
+          "{{spark_url}}/{{spark_id }}/catalogs" \
+          -d '{"catalog_names": "{{ catalog_name }}"}'
+      args:
+        executable: /bin/bash
+      register: associate_spark_response 
+###Assign AccessGroup to Catalog
+    - name: Call the catalog API 
+      become: no
+      shell: |
+         curl -X PATCH {{api_header}} \
+         -d '{{ catalog_group_data | to_nice_json }}' \
+         "{{catalog_url}}/{{ catalog_name }}"
+      args:
+        executable: /bin/bash
+      register: accessgroup_catalog_response   
+###Assign Reader Accessgroup to Presto Engine
+    - name: Call the presto API 
+      become: no
+      shell: |
+        curl -X PATCH \
+          -H "accept: application/json" \
+          -H "AuthInstanceId: {{ auth_instance_id }}" \
+          -H "Authorization: Bearer {{ access_token }}" \
+          -H "Content-Type: application/json" \
+          -d '{ 
+                "groups": [
+                  {"group_id": "{{ reader_access_group_id }}","permission": "{{ reader_engine_group_permission  }}"}
+                ]
+              }' \
+          "https://{{ region }}.lakehouse.cloud.ibm.com/lakehouse/api/v2/access/engines/{{ engine_id }}"
+      args:
+        executable: /bin/bash
+      register: accessgroup_engine_response 
+###Assign Auto Accessgroup to Presto Engine
+    - name: Call the presto API 
+      become: no
+      shell: |
+        curl -X PATCH \
+          -H "accept: application/json" \
+          -H "AuthInstanceId: {{ auth_instance_id }}" \
+          -H "Authorization: Bearer {{ access_token }}" \
+          -H "Content-Type: application/json" \
+          -d '{ 
+                "groups": [
+                  {"group_id": "{{ auto_access_group_id }}","permission": "{{ auto_engine_group_permission  }}"}
+                ]
+              }' \
+          "https://{{ region }}.lakehouse.cloud.ibm.com/lakehouse/api/v2/access/engines/{{ engine_id }}"
+      args:
+        executable: /bin/bash
+      register: accessgroup_engine_response 
+###Assign Accessgroup to Storage
+    - name: Call the storage API 
+      become: no
+      shell: |
+        curl -X PATCH {{api_header}} \
+        -d '{{ storage_group_data | to_nice_json }}' \
+        "{{storage_url}}/{{ ansible_bucket_name }}"
+      args:
+        executable: /bin/bash
+      register: accessgroup_storage_response   
+###Assign Accessgroup to Spark Engine
+    - name: Call the Spark API 
+      become: no
+      shell: |
+        curl -X PATCH \
+          -H "accept: application/json" \
+          -H "AuthInstanceId: {{ auth_instance_id }}" \
+          -H "Authorization: Bearer {{ access_token }}" \
+          -H "Content-Type: application/json" \
+          -d '{ 
+                "groups": [
+                  {"group_id": "{{ reader_access_group_id }}","permission": "{{ reader_engine_group_permission }}"}
+                ]
+              }' \
+          "https://{{ region }}.lakehouse.cloud.ibm.com/lakehouse/api/v2/access/engines/{{ spark_id }}"
+      args:
+        executable: /bin/bash
+      register: accessgroup_spark_response  
+###Assign Auto Accessgroup to Spark Engine
+    - name: Call the Spark API 
+      become: no
+      shell: |
+        curl -X PATCH \
+          -H "accept: application/json" \
+          -H "AuthInstanceId: {{ auth_instance_id }}" \
+          -H "Authorization: Bearer {{ access_token }}" \
+          -H "Content-Type: application/json" \
+          -d '{ 
+                "groups": [
+                  {"group_id": "{{ auto_access_group_id }}","permission": "{{ auto_engine_group_permission }}"}
+                ]
+              }' \
+          "https://{{ region }}.lakehouse.cloud.ibm.com/lakehouse/api/v2/access/engines/{{ spark_id }}"
+      args:
+        executable: /bin/bash
+      register: accessgroup_spark_response

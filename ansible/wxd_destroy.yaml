@@ -1,0 +1,69 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    - name: Request IAM token from IBM Cloud
+      shell: |
+        curl -X POST '{{ iam_url }}' -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey={{ ibmcloud_api_key }}'
+      args:
+        executable: /bin/bash
+      register: iam_token_response
+      tags: request_token
+      become: no
+    - name: Display IAM token
+      debug:
+        msg: "{{ iam_token_response.stdout | from_json | json_query('access_token') }}"
+    - name: Set access_token as a fact
+      set_fact:
+        access_token: "{{ iam_token_response.stdout | from_json | json_query('access_token') }}"
+
+  ##### Generate API Header #####
+    - name: Generating API Header
+      set_fact:
+        api_header: "-H 'accept: application/json' \
+                     -H 'AuthInstanceId: {{ auth_instance_id }}' \
+                     -H 'Authorization: Bearer {{ access_token }}' \
+                     -H 'Content-Type: application/json'"
+        deactivate_bucket_header: "-H 'accept: application/json' \
+                     -H 'AuthInstanceId: {{ auth_instance_id }}' \
+                     -H 'Authorization: Bearer {{ access_token }}'"
+    ## Set API for deactivating Bucket 
+    - name: Define API for Deactivating Bucket
+      set_fact:
+        deactivate_bucket_api: "{{ bucket_registration_api}}/{{ ansible_bucket_name }}/deactivate"   
+        delete_bucket_api : "{{ bucket_registration_api}}/{{ ansible_bucket_name }}"     
+  
+###Disassociate Catalog with Presto Engine. Note: This would restart Presto engine
+    - name: Call the Presto disassociation API  
+      become: no
+      shell: |
+         curl -X DELETE {{api_header}} \
+          "{{ presto_engine_url }}/{{ engine_id }}/catalogs?catalog_names={{catalog_name}}"
+      args:
+        executable: /bin/bash
+      register: disassociate_presto_response 
+###DisAssociate Catalog with Spark Engine
+    - name: Call the Spark disassociation API  
+      become: no
+      shell: |
+         curl -X DELETE {{api_header}} \
+          "{{spark_url}}/{{spark_id }}/catalogs?catalog_names={{catalog_name}}"
+      args:
+        executable: /bin/bash
+      register: disassociate_spark_response 
+###Call the Bucket Deactivation API
+    - name: Call the Bucket Deactivation API
+      become: no
+      shell: |
+        curl -X DELETE {{api_header}} "{{deactivate_bucket_api}}"
+      args:
+        executable: /bin/bash
+      register: deactivate_bucket_response
+###Call the Bucket Deletion API
+    - name: Call the Bucket Deletion API
+      become: no
+      shell: |
+        curl -X DELETE {{api_header}} "{{delete_bucket_api}}"
+      args:
+        executable: /bin/bash
+      register: delete_bucket_response
