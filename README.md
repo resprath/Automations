@@ -16,7 +16,7 @@ This repository provides a collection of **Terraform** and **Ansible** automatio
     ├── hosts.inv         # Ansible inventory file
     ├── wxd_create.yaml   # Creates Watsonx.data catalog and sets up permissions
     └── wxd_destroy.yaml  # Cleans up WXD catalog and related resources
-
+```
 ## Prerequisites
 
 Ensure the following before using this automation:
