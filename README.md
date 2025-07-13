@@ -38,13 +38,13 @@ git clone https://github.com/resprath/Automations
 cd Automations
 ```
 🔹 Step 2: Create a Schematics Workspace
-Go to IBM Cloud Schematics.
-Create a new workspace.
-Set GitHub as the source control and link this repo.
-Set input variables via UI or variables.tf
+- Go to [IBM Cloud Schematics](https://www.ibm.com/products/schematics).
+- Create a new **workspace**.
+- Set **GitHub** as the source control and link this repository.
+- Set input variables via the UI or define them in `variables.tf`.
 
 🔹 Step 3: Configure Variables
-Edit terraform.tfvars or define variables in the UI such as 
+- Edit terraform.tfvars or define variables in the UI such as 
 ```bash
 region            = "us-south"
 catalog_name      = "demo-catalog"
@@ -55,8 +55,8 @@ bucket_type       = "primary"
 ```
 
 🔹 Step 4: Apply Plan
-Run Apply Plan in the Schematics UI after ensuring the following variable in Schematics UI is set to true : -var="create=true".
-This will Provision all required cloud services and Watsonx.data resources
+- Run Apply Plan in the Schematics UI after ensuring the following variable in Schematics UI is set to true : -var="create=true".
+- This will Provision all required cloud services and Watsonx.data resources
 
 🔹 Step 5: Destroy resources
-In Schematics, Run Apply plan after changing -var="create=false " which will delete all WXD resources and then click Destroy to remove all Terraform-managed resources
+- In Schematics, Run Apply plan after changing -var="create=false " which will delete all WXD resources and then click Destroy to remove all Terraform-managed resources
